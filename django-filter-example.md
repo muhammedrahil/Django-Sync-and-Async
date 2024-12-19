@@ -32,3 +32,34 @@ async def async_download_proforma_to_customer(request, proforma_id):
     return JsonResponse({"msg":"Hello"}, status=200)
 
 ```
+
+```python
+from asgiref.sync import sync_to_async
+from django.db.models import QuerySet
+
+# Assuming ACTIVE is defined somewhere in your code
+# If not, make sure to import or define it
+
+async def async_download_proforma_to_customer(request, proforma_id):
+    # ... previous code ...
+
+    try:
+        proforma_header = await sync_to_async(ProformaHeader.objects.get)(id=proforma_id)
+
+        # Wrap the entire queryset operation in sync_to_async
+        @sync_to_async
+        def get_proforma_details():
+            return list(ProformaDetail.objects.filter(
+                proformaheader=proforma_header,
+                status=ACTIVE
+            ).order_by('lineno'))
+
+        proforma_details = await get_proforma_details()
+
+        # ... rest of your code ...
+
+    except Exception as e:
+        print(f"An error occurred: {str(e)}")
+        return JsonResponse({"error": "An unexpected error occurred"}, status=500)
+
+```

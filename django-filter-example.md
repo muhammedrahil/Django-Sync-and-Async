@@ -1,3 +1,11 @@
+Lazy Evaluation: Django querysets are lazy by default. This means they don't actually execute the database query until the results are needed. In a synchronous context, this is usually not an issue because the query is executed when you iterate over the queryset or access its elements.
+
+Asynchronous Context: In an asynchronous view, we can't rely on this lazy evaluation behavior. When you try to use a queryset directly in an async function, you'll get an error because the queryset itself is not awaitable and its lazy evaluation doesn't work well with async code.
+
+Immediate Execution: By converting the queryset to a list using `list()`, we force immediate execution of the database query. This ensures that all database operations are completed within the `sync_to_async` wrapper, avoiding any issues with accessing the database outside of the async-safe context.
+
+Serialization: When you return a response from a Django view (like a JsonResponse), Django needs to serialize the data. Querysets are not directly serializable, but lists of model instances are.
+
 ```python
 
 async def async_download_proforma_to_customer(request, proforma_id):
